@@ -1,9 +1,9 @@
-import { motion } from 'motion/react'
 import { Link } from 'react-router'
 import { usePartsOutBoard, useWake } from '@/app/viewModels'
 import { Button } from '@/ui/Button'
 import { ExperienceToggle } from '@/ui/ExperienceToggle'
 import { NimbusFrame } from '../NimbusFrame'
+import { Sun } from '../Sun'
 
 /** B1 · Sky (idle) */
 export default function Sky() {
@@ -12,13 +12,8 @@ export default function Sky() {
   const clouds = board.loans.filter(board.isOverdue).length
   return (
     <NimbusFrame right={<ExperienceToggle />}>
-      <div className="relative flex h-full flex-col justify-center gap-6">
-        <motion.div
-          aria-hidden="true"
-          className="absolute top-6 right-16 h-44 w-44 rounded-full bg-reward shadow-[0_0_80px_30px_var(--color-glow)]"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-        />
+      <div className="grid h-full grid-cols-[1.2fr_1fr] items-center gap-8">
+        <div className="flex flex-col gap-6">
         <h1 className="font-display text-6xl font-extrabold">Nimbus is napping</h1>
         <p className="max-w-xl text-xl text-ink-muted">The parts room is sunny today. Tap to wake Nimbus and start.</p>
         <div className="flex gap-4">
@@ -37,6 +32,10 @@ export default function Sky() {
         <Link to="/parts-out" className="text-ink-muted underline">
           View parts out
         </Link>
+        </div>
+        <div className="grid place-items-center">
+          <Sun mood="sleepy" size={340} />
+        </div>
       </div>
     </NimbusFrame>
   )
