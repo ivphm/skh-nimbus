@@ -14,6 +14,7 @@ test.describe('experience switch', () => {
     await page.goto('/')
     await expect(page.locator('html')).toHaveAttribute('data-experience', 'nimbus')
     await expect(page.getByRole('heading', { name: 'Nimbus is napping' })).toBeVisible()
+    await expect(page.getByRole('link', { name: /View parts out/ })).toBeVisible()
 
     await page.getByRole('switch').click()
     await expect(page.locator('html')).toHaveAttribute('data-experience', 'quest')
@@ -34,7 +35,8 @@ test.describe('experience switch', () => {
 test.describe('check-out flow', () => {
   test('Nimbus: card sign-in, draw two parts, seal the loan', async ({ page }) => {
     await page.goto('/?exp=nimbus')
-    await page.getByRole('button', { name: 'Tap staff card' }).click()
+    await page.getByRole('button', { name: 'Tap the sun to start' }).click()
+    await page.getByRole('button', { name: 'Use staff card' }).click()
     await expect(page.getByRole('heading', { name: 'Hi Alex! Nice to see you.' })).toBeVisible()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page.getByRole('heading', { name: /Morning, Alex/ })).toBeVisible()
@@ -73,7 +75,7 @@ test.describe('check-out flow', () => {
 
   test('Face ID greets the user, and "Not you?" switches to the card', async ({ page }) => {
     await page.goto('/?exp=nimbus')
-    await page.getByRole('button', { name: 'Wake Nimbus' }).click()
+    await page.getByRole('button', { name: 'Tap the sun to start' }).click()
     await expect(page.getByRole('heading', { name: 'Hi Alex! Nice to see you.' })).toBeVisible()
     await page.getByRole('button', { name: 'Not Alex? Use staff card' }).click()
     await expect(page.getByRole('heading', { name: 'Tap your staff card on the reader' })).toBeVisible()
@@ -82,7 +84,8 @@ test.describe('check-out flow', () => {
 
   test('Nimbus: every step can go back', async ({ page }) => {
     await page.goto('/?exp=nimbus')
-    await page.getByRole('button', { name: 'Tap staff card' }).click()
+    await page.getByRole('button', { name: 'Tap the sun to start' }).click()
+    await page.getByRole('button', { name: 'Use staff card' }).click()
     await page.getByRole('button', { name: 'Continue' }).click()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page.getByRole('heading', { name: 'Which job are you helping?' })).toBeVisible()
@@ -121,7 +124,7 @@ test.describe('check-out flow', () => {
 
   test('Face ID failure falls back to the staff card', async ({ page }) => {
     await page.goto('/?exp=nimbus&fail=face')
-    await page.getByRole('button', { name: 'Wake Nimbus' }).click()
+    await page.getByRole('button', { name: 'Tap the sun to start' }).click()
     await expect(page.getByRole('alert')).toContainText('Face not recognised')
     await expect(page.getByRole('heading', { name: /staff card/ })).toBeVisible()
   })
