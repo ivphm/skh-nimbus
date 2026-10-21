@@ -148,3 +148,15 @@ test('Parts Out board is view only and lists overdue loans', async ({ page }) =>
   await page.getByRole('link', { name: 'Station' }).click()
   await expect(page.getByRole('heading', { name: 'Nimbus is napping' })).toBeVisible()
 })
+
+test.describe('without a service worker', () => {
+  // Some browsers and private windows block service workers; the in-page mocks must take over.
+  test.use({ serviceWorkers: 'block' })
+
+  test('Nimbus sign-in still works', async ({ page }) => {
+    await page.goto('/?exp=nimbus')
+    await page.getByRole('button', { name: 'Tap the sun to start' }).click()
+    await expect(page.getByRole('heading', { name: 'Hi Alex! Nice to see you.' })).toBeVisible()
+    await expect(page.getByText('Could not sign you in')).toHaveCount(0)
+  })
+})
