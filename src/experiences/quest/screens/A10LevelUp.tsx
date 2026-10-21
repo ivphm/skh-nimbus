@@ -32,12 +32,15 @@ export default function LevelUp() {
             ))}
           </ul>
         </Card>
-        <p className="text-ink-muted" aria-live="polite">
-          Signing out in {s.secondsLeft} s · light strip cleared
-        </p>
-        <Button variant="secondary" onClick={() => void s.signOut()}>
-          Sign out now
-        </Button>
+        <p className="text-ink-muted">Light strip cleared · you’re still signed in</p>
+        <div className="flex gap-4">
+          <Button size="lg" onClick={s.nextTask} autoFocus>
+            Start another mission
+          </Button>
+          <Button size="lg" variant="secondary" onClick={() => void s.signOut()}>
+            Sign out
+          </Button>
+        </div>
       </div>
     </QuestFrame>
   )

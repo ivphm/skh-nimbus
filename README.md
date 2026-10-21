@@ -58,6 +58,10 @@ src/
 
 **Motion.** Motion for UI animation, SVG and CSS for the shelf map and hold ring, canvas-confetti for celebrations. Everything respects `prefers-reduced-motion`.
 
+## Sessions
+
+A signed-in user stays signed in after confirming a loan or closing a job, and can start another job straight away. The session ends only when they press **Sign out**. If they go idle with unconfirmed parts in their list, the station shows a warning but does not sign them out. This replaces the plan's automatic logout after confirm or timeout.
+
 ## Open points from the plan
 
-These are still undecided and are configurable in code: overdue threshold (`OVERDUE_AFTER_HOURS`, 48 h), idle and warning timeouts (`IDLE_TIMEOUT_MS`, `WARNING_GRACE_MS`), reward values and rank thresholds (`src/core/gamification/rules.ts`), and whether the overdue reminder must be resolved before drawing (currently dismissible).
+These are still undecided and are configurable in code: overdue threshold (`OVERDUE_AFTER_HOURS`, 48 h), the idle time before the unconfirmed-parts warning (`IDLE_TIMEOUT_MS`), reward values and rank thresholds (`src/core/gamification/rules.ts`), and whether the overdue reminder must be resolved before drawing (currently dismissible).

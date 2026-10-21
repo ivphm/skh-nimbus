@@ -4,7 +4,8 @@ import type { CartLine, Staff } from '../domain/types'
 /**
  * The check-out station workflow as a pure state machine.
  *
- * idle → signingIn (recognised → Continue) → reviewingLoans → selectingWorkOrder → drawing → confirming → success → idle
+ * idle → signingIn (recognised → Continue) → reviewingLoans → selectingWorkOrder → drawing → confirming → success
+ *   success → selectingWorkOrder for the next job; only SIGN_OUT returns to idle.
  *                                    ↘ closingJob ↗
  *
  * The machine knows nothing about screens or experiences. The app maps states to
@@ -38,6 +39,7 @@ export type WorkflowEvent =
   | { type: 'CONTINUE' }
   | { type: 'NOT_ME' }
   | { type: 'RETRY' }
+  | { type: 'NEXT_TASK' }
   | { type: 'LOANS_REVIEWED' }
   | { type: 'SELECT_WORK_ORDER'; workOrderId: string }
   | { type: 'CHANGE_WORK_ORDER' }
@@ -111,7 +113,7 @@ export function transition(state: WorkflowState, event: WorkflowEvent): Workflow
           // The screen confirms first when this empties a non-empty list.
           return { name: 'selectingWorkOrder', staff: state.staff }
         case 'STEP_AWAY':
-          return state.cart.length > 0 ? { ...state, unconfirmedWarning: true } : initialState
+          return state.cart.length > 0 ? { ...state, unconfirmedWarning: true } : state
         case 'DISMISS_WARNING':
           return { ...state, unconfirmedWarning: false }
         default:
@@ -138,6 +140,8 @@ export function transition(state: WorkflowState, event: WorkflowEvent): Workflow
       return state
 
     case 'success':
+      // Stay signed in: carry on with another job. Only SIGN_OUT ends the session.
+      if (event.type === 'NEXT_TASK') return { name: 'selectingWorkOrder', staff: state.staff }
       return state
   }
 }

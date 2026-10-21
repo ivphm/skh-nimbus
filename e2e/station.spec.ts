@@ -54,6 +54,14 @@ test.describe('check-out flow', () => {
     await hold(page, 'Hold to seal the loan')
     await expect(page.getByRole('heading', { name: 'Sealed! Sunny skies' })).toBeVisible()
     await expect(page.getByText('2 parts out on WO-2041')).toBeVisible()
+
+    // Still signed in: no countdown, and the next job starts from here.
+    await page.waitForTimeout(6000)
+    await expect(page.getByRole('heading', { name: 'Sealed! Sunny skies' })).toBeVisible()
+    await page.getByRole('button', { name: 'Start another job' }).click()
+    await expect(page.getByRole('heading', { name: 'Which job are you helping?' })).toBeVisible()
+    await page.getByRole('button', { name: 'Sign out' }).click()
+    await expect(page.getByRole('heading', { name: 'Nimbus is napping' })).toBeVisible()
   })
 
   test('Quest: close a teammate’s overdue loan from the quest board', async ({ page }) => {

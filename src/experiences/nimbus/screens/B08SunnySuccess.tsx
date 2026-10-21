@@ -27,12 +27,15 @@ export default function SunnySuccess() {
             </p>
             <p className="text-sm text-ink-muted">Everyone’s loans on time keep the room sunny.</p>
           </Card>
-          <p className="text-ink-muted" aria-live="polite">
-            Signing out in {s.secondsLeft} s
-          </p>
-          <Button variant="secondary" onClick={() => void s.signOut()}>
-            Sign out now
-          </Button>
+          <p className="text-ink-muted">You’re still signed in.</p>
+          <div className="flex gap-4">
+            <Button size="lg" onClick={s.nextTask} autoFocus>
+              Start another job
+            </Button>
+            <Button size="lg" variant="secondary" onClick={() => void s.signOut()}>
+              Sign out
+            </Button>
+          </div>
         </div>
         <motion.div className="grid place-items-center" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 120 }}>
           <Sun mood="happy" size={360} />

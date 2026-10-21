@@ -227,22 +227,18 @@ export function useConfirm() {
   }
 }
 
-export const SUCCESS_SIGN_OUT_SECONDS = 5
-
-/** I5: summary, then automatic sign-out. */
+/** I5: summary of what was recorded. The user stays signed in until they press Sign out. */
 export function useSuccess() {
   const state = useWorkflowIn('success')
-  const [left, setLeft] = useState(SUCCESS_SIGN_OUT_SECONDS)
+  const send = useWorkflow((s) => s.send)
   const progress = useStaffProgress(state?.staff.id)
-  useEffect(() => {
-    if (!state) return
-    const t = setInterval(() => setLeft((n) => n - 1), 1000)
-    return () => clearInterval(t)
-  }, [state])
-  useEffect(() => {
-    if (left <= 0) void actions.signOut()
-  }, [left])
-  return { state, secondsLeft: Math.max(0, left), progress, level: levelFor(progress.xp), signOut: actions.signOut }
+  return {
+    state,
+    progress,
+    level: levelFor(progress.xp),
+    nextTask: () => send({ type: 'NEXT_TASK' }),
+    signOut: actions.signOut,
+  }
 }
 
 /** I6: every open loan on a work order, including other people's. */

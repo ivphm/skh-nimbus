@@ -100,6 +100,12 @@ describe('workflow machine', () => {
     expect(transition(closing, { type: 'JOB_CLOSED', loanIds: ['L-1'] })).toMatchObject({ name: 'success', kind: 'closed' })
   })
 
+  it('stays signed in after success until the user signs out', () => {
+    const success: WorkflowState = { name: 'success', staff: alex, workOrderId: 'WO-2041', kind: 'loan', loanIds: ['L-9'] }
+    expect(transition(success, { type: 'NEXT_TASK' })).toEqual({ name: 'selectingWorkOrder', staff: alex })
+    expect(transition(success, { type: 'SIGN_OUT' })).toEqual(initialState)
+  })
+
   it('ignores events that do not apply', () => {
     expect(transition(initialState, { type: 'REVIEW' })).toBe(initialState)
   })
