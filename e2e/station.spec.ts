@@ -82,6 +82,15 @@ test.describe('check-out flow', () => {
     await expect(page.getByRole('heading', { name: 'Hi Alex! Nice to see you.' })).toBeVisible()
   })
 
+  test('Nimbus: tapping the sun signs in with Face ID and carries on by itself', async ({ page }) => {
+    await page.goto('/?exp=nimbus')
+    await page.getByRole('button', { name: 'Tap the sun to start' }).click()
+    await expect(page.getByRole('heading', { name: 'Hi Alex! Nice to see you.' })).toBeVisible()
+    await expect(page.getByText(/Continuing in \d s/)).toBeVisible()
+    // No click: the greeting moves on after its countdown.
+    await expect(page.getByRole('heading', { name: /Morning, Alex/ })).toBeVisible({ timeout: 8000 })
+  })
+
   test('Nimbus: every step can go back', async ({ page }) => {
     await page.goto('/?exp=nimbus')
     await page.getByRole('button', { name: 'Tap the sun to start' }).click()

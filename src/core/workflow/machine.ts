@@ -12,7 +12,7 @@ import type { CartLine, Staff } from '../domain/types'
  */
 
 export type AuthMethod = 'face' | 'card'
-export type AuthError = 'face-not-recognised' | 'card-not-read'
+export type AuthError = 'face-not-recognised' | 'card-not-read' | 'sign-in-unavailable'
 
 export type WorkflowState =
   | { name: 'idle' }
@@ -37,6 +37,7 @@ export type WorkflowEvent =
   | { type: 'AUTH_FAILED'; error: AuthError }
   | { type: 'CONTINUE' }
   | { type: 'NOT_ME' }
+  | { type: 'RETRY' }
   | { type: 'LOANS_REVIEWED' }
   | { type: 'SELECT_WORK_ORDER'; workOrderId: string }
   | { type: 'CHANGE_WORK_ORDER' }
@@ -74,6 +75,7 @@ export function transition(state: WorkflowState, event: WorkflowEvent): Workflow
           : { name: 'selectingWorkOrder', staff: state.recognised.staff }
       // Wrong person recognised: scan the staff card instead.
       if (event.type === 'NOT_ME') return { name: 'signingIn', method: 'card' }
+      if (event.type === 'RETRY' && !state.recognised) return { name: 'signingIn', method: state.method }
       // Face ID failure falls back to the staff card.
       if (event.type === 'AUTH_FAILED' && !state.recognised)
         return { name: 'signingIn', method: event.error === 'face-not-recognised' ? 'card' : state.method, error: event.error }

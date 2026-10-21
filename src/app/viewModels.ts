@@ -25,6 +25,8 @@ export function useSignedInStaff(): Staff | null {
   return useWorkflow((s) => signedInStaff(s.state))
 }
 
+export const GREETING_SECONDS = 4
+
 /**
  * I1/I2: runs Face ID, with the card as fallback. Once someone is recognised the station
  * greets them and waits for Continue, so a wrong match can be corrected with "Not you?".
@@ -34,7 +36,8 @@ export function useSignIn() {
   const method = state?.method
   const recognised = state?.recognised
   useEffect(() => {
-    if (!method || recognised) return
+    // A server error waits for Try again rather than retrying in a loop.
+    if (!method || recognised || state?.error === 'sign-in-unavailable') return
     const ctrl = new AbortController()
     const run = method === 'face' ? actions.signInWithFace : actions.signInWithCard
     run(ctrl.signal).catch(() => undefined)
@@ -42,10 +45,23 @@ export function useSignIn() {
   }, [method, state?.error, recognised])
   const send = useWorkflow((s) => s.send)
   const progress = useStaffProgress(recognised?.staff.id)
+  // After a match, carry on by itself after a short countdown. Continue and Not you? stay available.
+  const [tick, setTick] = useState<{ for: unknown; n: number }>({ for: null, n: 0 })
+  useEffect(() => {
+    if (!recognised) return
+    const t = setInterval(() => setTick((p) => ({ for: recognised, n: p.for === recognised ? p.n + 1 : 1 })), 1000)
+    return () => clearInterval(t)
+  }, [recognised])
+  const secondsLeft = GREETING_SECONDS - (tick.for === recognised ? tick.n : 0)
+  useEffect(() => {
+    if (recognised && secondsLeft <= 0) send({ type: 'CONTINUE' })
+  }, [recognised, secondsLeft, send])
   return {
     method,
     error: state?.error,
     recognised,
+    secondsLeft: Math.max(0, secondsLeft),
+    retry: () => send({ type: 'RETRY' }),
     progress,
     level: levelFor(progress.xp),
     proceed: () => send({ type: 'CONTINUE' }),

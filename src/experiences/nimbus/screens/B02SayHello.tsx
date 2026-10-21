@@ -35,6 +35,9 @@ export default function SayHello() {
                 Not {first}? Use staff card
               </Button>
             </div>
+            <p className="text-sm text-ink-muted" aria-live="polite">
+              Continuing in {s.secondsLeft} s…
+            </p>
           </>
         ) : (
           <>
@@ -52,7 +55,12 @@ export default function SayHello() {
                   Use staff card
                 </Button>
               )}
-              {s.method === 'card' && s.error && (
+              {s.error === 'sign-in-unavailable' && (
+                <Button size="lg" onClick={s.retry}>
+                  Try again
+                </Button>
+              )}
+              {s.error === 'card-not-read' && (
                 <Button size="lg" onClick={s.useCard}>
                   Try card again
                 </Button>

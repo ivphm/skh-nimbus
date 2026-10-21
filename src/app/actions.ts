@@ -21,12 +21,32 @@ gameBus.onAny((event) => useProgress.getState().apply(event))
 
 let cleanStreak = 0
 
-async function finishAuth(result: AuthResult) {
+/** A scan that never answers falls back to the card instead of hanging. */
+export const AUTH_TIMEOUT_MS = 10_000
+
+function withTimeout(scan: Promise<AuthResult>, error: 'face-not-recognised' | 'card-not-read'): Promise<AuthResult> {
+  let timer: ReturnType<typeof setTimeout>
+  const timeout = new Promise<AuthResult>((resolve) => {
+    timer = setTimeout(() => resolve({ ok: false, error }), AUTH_TIMEOUT_MS)
+  })
+  return Promise.race([scan, timeout]).finally(() => clearTimeout(timer))
+}
+
+async function finishAuth(result: AuthResult, signal?: AbortSignal) {
+  if (signal?.aborted) return
   if (!result.ok) {
     send({ type: 'AUTH_FAILED', error: result.error })
     return
   }
-  const [staff, active] = await Promise.all([api.staff(result.staffId), api.loans()])
+  let staff, active
+  try {
+    ;[staff, active] = await Promise.all([api.staff(result.staffId), api.loans()])
+  } catch {
+    // Never leave the user on "hold still": say so and offer retry or the card.
+    if (!signal?.aborted) send({ type: 'AUTH_FAILED', error: 'sign-in-unavailable' })
+    return
+  }
+  if (signal?.aborted) return
   const now = new Date()
   const hasOpenLoans = active.some((l) => l.drawnBy === staff.id || isOverdue(l, now))
   cleanStreak = 0
@@ -34,11 +54,11 @@ async function finishAuth(result: AuthResult) {
 }
 
 export async function signInWithFace(signal?: AbortSignal) {
-  await finishAuth(await services.faceId.scan(signal))
+  await finishAuth(await withTimeout(services.faceId.scan(signal), 'face-not-recognised'), signal)
 }
 
 export async function signInWithCard(signal?: AbortSignal) {
-  await finishAuth(await services.cardReader.waitForTap(signal))
+  await finishAuth(await withTimeout(services.cardReader.waitForTap(signal), 'card-not-read'), signal)
 }
 
 export function addPart(partId: string, qty = 1) {

@@ -41,6 +41,9 @@ export default function CrewCheckIn() {
               Not {staff.name.split(' ')[0]}? Use staff card
             </Button>
           </div>
+          <p className="text-sm text-ink-muted" aria-live="polite">
+            Continuing in {s.secondsLeft} s…
+          </p>
         </div>
       </QuestFrame>
     )
@@ -70,7 +73,12 @@ export default function CrewCheckIn() {
               Use staff card
             </Button>
           )}
-          {s.method === 'card' && s.error && (
+          {s.error === 'sign-in-unavailable' && (
+            <Button size="lg" onClick={s.retry}>
+              Try again
+            </Button>
+          )}
+          {s.error === 'card-not-read' && (
             <Button size="lg" onClick={s.useCard}>
               Try card again
             </Button>

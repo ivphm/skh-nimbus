@@ -47,6 +47,12 @@ describe('workflow machine', () => {
     expect(transition(drawing, { type: 'CHANGE_WORK_ORDER' })).toEqual({ name: 'selectingWorkOrder', staff: alex })
   })
 
+  it('stays on Face ID with an error when sign-in is unavailable, until retried', () => {
+    const failed = run([{ type: 'WAKE' }, { type: 'AUTH_FAILED', error: 'sign-in-unavailable' }])
+    expect(failed).toEqual({ name: 'signingIn', method: 'face', error: 'sign-in-unavailable' })
+    expect(transition(failed, { type: 'RETRY' })).toEqual({ name: 'signingIn', method: 'face' })
+  })
+
   it('falls back to the staff card when Face ID fails', () => {
     const s = run([{ type: 'WAKE' }, { type: 'AUTH_FAILED', error: 'face-not-recognised' }])
     expect(s).toEqual({ name: 'signingIn', method: 'card', error: 'face-not-recognised' })
