@@ -58,7 +58,8 @@ test.describe('check-out flow', () => {
 
   test('Quest: close a teammate’s overdue loan from the quest board', async ({ page }) => {
     await page.goto('/?exp=quest')
-    await page.getByRole('button', { name: 'Tap staff card' }).click()
+    await page.getByRole('button', { name: 'Tap the core to start' }).click()
+    await page.getByRole('button', { name: 'Use staff card' }).click()
     await expect(page.getByRole('heading', { name: 'Welcome back, Alex!' })).toBeVisible()
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page.getByText(/Side quest/)).toBeVisible()
