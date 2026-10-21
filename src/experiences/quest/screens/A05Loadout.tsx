@@ -1,6 +1,7 @@
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { pathFor } from '@/app/routes'
 import { useDrawing } from '@/app/viewModels'
+import { BackButton } from '@/ui/BackButton'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
 import { QtyStepper } from '@/ui/QtyStepper'
@@ -11,8 +12,10 @@ const SLOTS = 6
 /** A5 · Loadout (backpack): the current list plus search, browse by machine and scan (I3, I3b). */
 export default function Loadout() {
   const d = useDrawing()
+  const navigate = useNavigate()
   return (
     <QuestFrame>
+      <BackButton label="Mission briefing" onClick={() => navigate(pathFor('briefing'))} />
       <div className="grid grid-cols-[1fr_1.1fr] gap-8">
         <section>
           <h1 className="font-display text-3xl font-bold">Backpack</h1>
@@ -41,9 +44,6 @@ export default function Loadout() {
             </Button>
             <Link to={pathFor('scan')} className="inline-flex min-h-16 items-center rounded-control border border-border px-6 font-display font-semibold">
               Scan a part
-            </Link>
-            <Link to={pathFor('briefing')} className="inline-flex min-h-16 items-center px-4 text-ink-muted">
-              Briefing
             </Link>
           </div>
         </section>

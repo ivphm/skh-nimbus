@@ -1,4 +1,5 @@
 import { useCloseJob } from '@/app/viewModels'
+import { BackButton } from '@/ui/BackButton'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
 import { ConfirmSheet } from '@/ui/ConfirmSheet'
@@ -10,6 +11,7 @@ export default function ClearTheClouds() {
   const j = useCloseJob()
   return (
     <NimbusFrame>
+      <BackButton onClick={j.back} />
       <h1 className="font-display text-4xl font-extrabold">Clear the clouds on {j.workOrder?.id}</h1>
       <p className="text-lg text-ink-muted">Mark each part as used up or returned. Anyone can help close a loan.</p>
       <ul className="mt-6 space-y-3">
@@ -49,9 +51,6 @@ export default function ClearTheClouds() {
         </div>
         <Button size="lg" disabled={j.decidedCount === 0 || j.busy} onClick={() => void j.finish()}>
           Close the job
-        </Button>
-        <Button size="lg" variant="ghost" onClick={j.back}>
-          Back
         </Button>
       </div>
       {j.pending && (

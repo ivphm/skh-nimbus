@@ -1,6 +1,6 @@
 import { locationLabel } from '@/core/domain/ledger'
 import { useConfirm } from '@/app/viewModels'
-import { Button } from '@/ui/Button'
+import { BackButton } from '@/ui/BackButton'
 import { Card } from '@/ui/Card'
 import { HoldButton } from '@/ui/HoldButton'
 import { Notice } from '@/ui/Notice'
@@ -12,6 +12,7 @@ export default function SealTheLoan() {
   const c = useConfirm()
   return (
     <NimbusFrame>
+      <BackButton label="My bag" onClick={c.back} />
       <div className="grid grid-cols-[1.2fr_1fr] gap-8">
         <Card>
           <h1 className="font-display text-3xl font-extrabold">Your loan · {c.workOrderId}</h1>
@@ -27,9 +28,6 @@ export default function SealTheLoan() {
             ))}
           </ul>
           <p className="mt-4 text-ink-muted">Sealing records the loan on your name. You or a teammate can close it later.</p>
-          <Button variant="ghost" className="mt-2" onClick={c.back}>
-            Back to my bag
-          </Button>
         </Card>
         <section className="flex flex-col items-center justify-center gap-4 text-center">
           <HoldButton label="Hold to seal the loan" onComplete={() => void c.confirm()} disabled={c.busy}>

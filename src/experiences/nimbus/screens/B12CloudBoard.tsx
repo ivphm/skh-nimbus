@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { usePartsOutBoard } from '@/app/viewModels'
 import { Card } from '@/ui/Card'
 import { loanAge } from '@/ui/format'
@@ -8,6 +9,9 @@ export default function CloudBoard() {
   const b = usePartsOutBoard()
   return (
     <NimbusFrame health={b.health} right={<span className="text-sm font-semibold text-ink-muted">View only · live</span>}>
+      <Link to="/" className="mb-3 inline-flex min-h-12 items-center gap-2 font-display font-semibold text-ink-muted hover:text-ink">
+        <span aria-hidden="true">←</span> Station
+      </Link>
       <h1 className="font-display text-4xl font-extrabold">Parts Out · Cloud board</h1>
       <p className="text-lg text-ink-muted">Parts currently out of the room. Grey clouds are overdue.</p>
       {b.loans.length === 0 ? (

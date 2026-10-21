@@ -2,7 +2,9 @@ import { useNavigate } from 'react-router'
 import { pathFor } from '@/app/routes'
 import { useDrawing } from '@/app/viewModels'
 import { Button } from '@/ui/Button'
+import { BackButton } from '@/ui/BackButton'
 import { Card } from '@/ui/Card'
+import { ConfirmSheet } from '@/ui/ConfirmSheet'
 import { timeOfDay } from '@/ui/format'
 import { QuestFrame } from '../QuestFrame'
 
@@ -13,6 +15,7 @@ export default function MissionBriefing() {
   const wo = d.workOrder
   return (
     <QuestFrame>
+      <BackButton label="Quest board" onClick={d.changeWorkOrder} />
       {wo && (
         <div className="grid grid-cols-[1.2fr_1fr] gap-8">
           <section className="space-y-4">
@@ -34,9 +37,6 @@ export default function MissionBriefing() {
               <Button size="lg" onClick={() => navigate(pathFor('cart'))}>
                 Open backpack {d.count > 0 && `(${d.count})`}
               </Button>
-              <Button size="lg" variant="ghost" onClick={d.changeWorkOrder} disabled={d.count > 0}>
-                Pick another mission
-              </Button>
             </div>
           </section>
           <Card>
@@ -57,6 +57,11 @@ export default function MissionBriefing() {
             </ul>
           </Card>
         </div>
+      )}
+      {d.confirmingChange && (
+        <ConfirmSheet title="Pick a different job?" confirmLabel="Empty list and go back" onConfirm={d.confirmChange} onCancel={d.cancelChange}>
+          The {d.count} {d.count === 1 ? 'part' : 'parts'} in your list will be removed. Put them back on the shelf.
+        </ConfirmSheet>
       )}
     </QuestFrame>
   )

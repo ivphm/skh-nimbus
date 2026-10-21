@@ -1,9 +1,8 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
-import { Link } from 'react-router'
-import { pathFor } from '@/app/routes'
 import { useLastScan } from '@/app/scan'
-import { useDrawing } from '@/app/viewModels'
+import { useBackToFlow, useDrawing } from '@/app/viewModels'
+import { BackButton } from '@/ui/BackButton'
 import { services } from '@/core/services'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
@@ -17,8 +16,10 @@ export default function Collect() {
   const { outcome, at } = useLastScan()
   const progress = useStaffProgress(d.staff?.id)
   const [manual, setManual] = useState('')
+  const back = useBackToFlow('cart')
   return (
     <QuestFrame>
+      <BackButton label="Backpack" onClick={back} />
       <div className="grid grid-cols-[1.3fr_1fr] gap-8">
         <section className="relative grid aspect-video place-items-center rounded-card border border-border bg-black/60">
           <div aria-hidden="true" className="h-40 w-72 rounded-card border-4 border-dashed border-accent" />
@@ -78,9 +79,6 @@ export default function Collect() {
             <Button size="lg" onClick={d.review} disabled={d.count === 0}>
               Lock in loadout
             </Button>
-            <Link to={pathFor('cart')} className="inline-flex min-h-16 items-center px-4 text-ink-muted underline">
-              Backpack
-            </Link>
           </div>
         </Card>
       </div>

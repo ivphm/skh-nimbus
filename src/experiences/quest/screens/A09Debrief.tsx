@@ -1,4 +1,5 @@
 import { useCloseJob } from '@/app/viewModels'
+import { BackButton } from '@/ui/BackButton'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
 import { ConfirmSheet } from '@/ui/ConfirmSheet'
@@ -9,6 +10,7 @@ export default function Debrief() {
   const j = useCloseJob()
   return (
     <QuestFrame>
+      <BackButton label="Quest board" onClick={j.back} />
       <div className="grid grid-cols-[1.4fr_1fr] gap-8">
         <section>
           <h1 className="font-display text-3xl font-bold">Mission debrief · {j.workOrder?.id}</h1>
@@ -40,9 +42,6 @@ export default function Debrief() {
           <div className="mt-6 flex gap-3">
             <Button size="lg" disabled={j.decidedCount === 0 || j.busy} onClick={() => void j.finish()}>
               Complete debrief
-            </Button>
-            <Button size="lg" variant="ghost" onClick={j.back}>
-              Back
             </Button>
           </div>
         </section>

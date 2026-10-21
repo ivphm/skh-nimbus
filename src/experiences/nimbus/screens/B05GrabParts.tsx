@@ -4,8 +4,10 @@ import { useLastScan } from '@/app/scan'
 import { useDrawing } from '@/app/viewModels'
 import type { Part } from '@/core/domain/types'
 import { services } from '@/core/services'
+import { BackButton } from '@/ui/BackButton'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
+import { ConfirmSheet } from '@/ui/ConfirmSheet'
 import { partNo } from '@/ui/format'
 import { ErrorNotice } from '@/ui/Notice'
 import { QtyStepper } from '@/ui/QtyStepper'
@@ -38,6 +40,7 @@ export default function GrabParts() {
   const suggestedIds = new Set(d.suggestions.map((s) => s.partId))
   return (
     <NimbusFrame>
+      <BackButton label="Pick another job" onClick={d.changeWorkOrder} />
       <div className="grid grid-cols-[1.6fr_1fr] gap-6">
         <section>
           <h1 className="font-display text-4xl font-extrabold">Grab your parts</h1>
@@ -96,9 +99,6 @@ export default function GrabParts() {
           <Button size="lg" onClick={d.review} disabled={d.count === 0}>
             Seal the loan
           </Button>
-          <Button variant="ghost" onClick={d.changeWorkOrder} disabled={d.count > 0}>
-            Pick another job
-          </Button>
           <details className="text-sm text-ink-muted">
             <summary>Demo: simulate a scan</summary>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -111,6 +111,11 @@ export default function GrabParts() {
           </details>
         </Card>
       </div>
+      {d.confirmingChange && (
+        <ConfirmSheet title="Pick a different job?" confirmLabel="Empty list and go back" onConfirm={d.confirmChange} onCancel={d.cancelChange}>
+          The {d.count} {d.count === 1 ? 'part' : 'parts'} in your list will be removed. Put them back on the shelf.
+        </ConfirmSheet>
+      )}
     </NimbusFrame>
   )
 }

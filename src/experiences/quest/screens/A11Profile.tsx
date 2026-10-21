@@ -1,5 +1,6 @@
 import { RANKS } from '@/core/gamification/rules'
-import { useMyStats } from '@/app/viewModels'
+import { useBackToFlow, useMyStats } from '@/app/viewModels'
+import { BackButton } from '@/ui/BackButton'
 import { Card } from '@/ui/Card'
 import { ProgressBar } from '@/ui/ProgressBar'
 import { QuestFrame } from '../QuestFrame'
@@ -9,8 +10,10 @@ const BADGES: Record<string, string> = { 'first-scan': 'First scan', closer: 'Cl
 /** A11 · Profile & rank ladder (private stats, I9). */
 export default function Profile() {
   const m = useMyStats()
+  const back = useBackToFlow()
   return (
     <QuestFrame>
+      <BackButton onClick={back} />
       <div className="grid grid-cols-3 gap-6">
         <Card>
           <h1 className="font-display text-2xl font-bold">{m.staff?.name}</h1>

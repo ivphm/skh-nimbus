@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import { api } from '@/core/api/client'
 import { isOverdue, partsOut, roomHealth } from '@/core/domain/ledger'
 import type { Loan, LoanOutcome, Part, Staff } from '@/core/domain/types'
@@ -8,6 +9,7 @@ import { signedInStaff } from '@/core/workflow/machine'
 import { useWorkflow, useWorkflowIn } from '@/core/workflow/store'
 import * as actions from './actions'
 import { useLedStrip, useNow, usePartsById, useResource } from './hooks'
+import { pathFor, primaryScreen, type ScreenId } from './routes'
 
 /**
  * Experience-neutral view models. Each screen in Quest and Nimbus renders one of these,
@@ -23,23 +25,48 @@ export function useSignedInStaff(): Staff | null {
   return useWorkflow((s) => signedInStaff(s.state))
 }
 
-/** I1/I2: wakes the station and runs Face ID, with the card as fallback. */
+/**
+ * I1/I2: runs Face ID, with the card as fallback. Once someone is recognised the station
+ * greets them and waits for Continue, so a wrong match can be corrected with "Not you?".
+ */
 export function useSignIn() {
   const state = useWorkflowIn('signingIn')
   const method = state?.method
+  const recognised = state?.recognised
   useEffect(() => {
-    if (!method) return
+    if (!method || recognised) return
     const ctrl = new AbortController()
     const run = method === 'face' ? actions.signInWithFace : actions.signInWithCard
     run(ctrl.signal).catch(() => undefined)
     return () => ctrl.abort()
-  }, [method, state?.error])
+  }, [method, state?.error, recognised])
   const send = useWorkflow((s) => s.send)
+  const progress = useStaffProgress(recognised?.staff.id)
   return {
     method,
     error: state?.error,
+    recognised,
+    progress,
+    level: levelFor(progress.xp),
+    proceed: () => send({ type: 'CONTINUE' }),
+    notMe: () => send({ type: 'NOT_ME' }),
     useCard: () => send({ type: 'USE_CARD' }),
-    cancel: () => send({ type: 'BACK' }),
+    cancel: () => send({ type: 'SIGN_OUT' }),
+  }
+}
+
+/**
+ * Back for screens outside the main path (stats, team, locate, scan): returns to the screen
+ * the user came from. With no in-app history (opened directly), goes to `to` while drawing,
+ * or to the screen for the current workflow step. Route guards catch a stale previous screen.
+ */
+export function useBackToFlow(to?: ScreenId) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const state = useWorkflow((s) => s.state)
+  return () => {
+    if (location.key !== 'default') navigate(-1)
+    else navigate(pathFor(to && state.name === 'drawing' ? to : primaryScreen(state)), { replace: true })
   }
 }
 
@@ -89,6 +116,7 @@ export function useWorkOrders() {
     openLoansOn: (id: string) => (loans ?? []).filter((l) => l.workOrderId === id),
     select: (workOrderId: string) => send({ type: 'SELECT_WORK_ORDER', workOrderId }),
     closeJob: (workOrderId: string) => send({ type: 'CLOSE_JOB', workOrderId }),
+    back: () => send({ type: 'BACK' }),
   }
 }
 
@@ -104,6 +132,8 @@ export function useDrawing() {
   const { data: results } = useResource(() => api.parts({ search: search || undefined, machine: machine ?? undefined }), `parts:${search}:${machine}`)
   const { data: machines } = useResource(() => api.machines(), 'machines')
   const cart = state?.cart ?? []
+  const [confirmingChange, setConfirmingChange] = useState(false)
+  const change = () => send({ type: 'CHANGE_WORK_ORDER' })
   return {
     staff: state?.staff ?? null,
     workOrder,
@@ -121,7 +151,14 @@ export function useDrawing() {
     setQty: (partId: string, qty: number) => send({ type: 'SET_QTY', partId, qty }),
     qtyOf: (partId: string) => cart.find((l) => l.partId === partId)?.qty ?? 0,
     review: () => send({ type: 'REVIEW' }),
-    changeWorkOrder: () => send({ type: 'CHANGE_WORK_ORDER' }),
+    /** Going back to the job list empties the list, so ask first when it has parts. */
+    changeWorkOrder: () => (cart.length > 0 ? setConfirmingChange(true) : change()),
+    confirmingChange,
+    confirmChange: () => {
+      setConfirmingChange(false)
+      change()
+    },
+    cancelChange: () => setConfirmingChange(false),
     stepAway: actions.stepAway,
   }
 }

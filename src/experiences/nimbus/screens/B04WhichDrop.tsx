@@ -1,13 +1,15 @@
 import { useWorkOrders } from '@/app/viewModels'
+import { BackButton } from '@/ui/BackButton'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
 import { NimbusFrame } from '../NimbusFrame'
 
 /** B4 · Which drop? (pick a work order, I2b). */
 export default function WhichDrop() {
-  const { workOrders, select, closeJob, openLoansOn } = useWorkOrders()
+  const { workOrders, select, closeJob, openLoansOn, back } = useWorkOrders()
   return (
     <NimbusFrame>
+      <BackButton label="Today’s forecast" onClick={back} />
       <h1 className="font-display text-4xl font-extrabold">Which job are you helping?</h1>
       <p className="text-lg text-ink-muted">Each work order is a drop. The more drops, the more urgent.</p>
       <ul className="mt-6 grid grid-cols-3 gap-5">

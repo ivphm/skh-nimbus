@@ -1,6 +1,6 @@
-import { Link, useParams } from 'react-router'
-import { pathFor } from '@/app/routes'
-import { useLocate } from '@/app/viewModels'
+import { useParams } from 'react-router'
+import { useBackToFlow, useLocate } from '@/app/viewModels'
+import { BackButton } from '@/ui/BackButton'
 import { Button } from '@/ui/Button'
 import { Card } from '@/ui/Card'
 import { ErrorNotice } from '@/ui/Notice'
@@ -11,8 +11,10 @@ import { NimbusFrame } from '../NimbusFrame'
 export default function FollowTheLight() {
   const { partId } = useParams()
   const l = useLocate(partId)
+  const back = useBackToFlow('cart')
   return (
     <NimbusFrame>
+      <BackButton label="My bag" onClick={back} />
       <div className="grid grid-cols-[1.5fr_1fr] gap-6">
         <ShelfMap location={l.part?.location ?? null} strip={l.strip.status} />
         <Card className="space-y-4">
@@ -33,9 +35,7 @@ export default function FollowTheLight() {
             </Button>
           </div>
           <p className="text-sm text-ink-muted">Scan the part when you have it. It goes straight into your bag.</p>
-          <Link to={pathFor('cart')} className="inline-flex min-h-12 items-center rounded-control bg-accent px-6 font-display font-bold text-accent-ink">
-            Back to my bag
-          </Link>
+          <Button onClick={back}>Done, back to my bag</Button>
         </Card>
       </div>
     </NimbusFrame>

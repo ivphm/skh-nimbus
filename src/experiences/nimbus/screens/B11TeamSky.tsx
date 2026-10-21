@@ -1,12 +1,15 @@
-import { useTeamWeek } from '@/app/viewModels'
+import { useBackToFlow, useTeamWeek } from '@/app/viewModels'
+import { BackButton } from '@/ui/BackButton'
 import { Card } from '@/ui/Card'
 import { NimbusFrame } from '../NimbusFrame'
 
 /** B11 · Team sky (shared weekly forecast). Team totals only, no personal stats. */
 export default function TeamSky() {
   const t = useTeamWeek()
+  const back = useBackToFlow()
   return (
     <NimbusFrame>
+      <BackButton onClick={back} />
       <h1 className="font-display text-4xl font-extrabold">Team weather this week</h1>
       <div className="mt-6 grid grid-cols-3 gap-5">
         <Card>

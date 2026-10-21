@@ -1,4 +1,5 @@
-import { useMyStats } from '@/app/viewModels'
+import { useBackToFlow, useMyStats } from '@/app/viewModels'
+import { BackButton } from '@/ui/BackButton'
 import { Card } from '@/ui/Card'
 import { partNo } from '@/ui/format'
 import { NimbusFrame } from '../NimbusFrame'
@@ -7,8 +8,10 @@ import { NimbusFrame } from '../NimbusFrame'
 export default function Partdex() {
   const m = useMyStats()
   const got = new Set(m.progress.collected)
+  const back = useBackToFlow()
   return (
     <NimbusFrame>
+      <BackButton onClick={back} />
       <div className="flex items-end justify-between">
         <div>
           <h1 className="font-display text-4xl font-extrabold">Partdex</h1>
