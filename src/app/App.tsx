@@ -66,8 +66,9 @@ function StepAwayWarning() {
 
 function ScreenRoute({ id }: { id: ScreenId }) {
   const state = useWorkflow((s) => s.state)
+  const previous = useWorkflow((s) => s.previous)
   const def = EXPERIENCES[useExperienceId()]
-  if (!allows(id, state)) return <Navigate to={pathFor(primaryScreen(state))} replace />
+  if (!allows(id, state)) return <Navigate to={pathFor(primaryScreen(state, previous ?? undefined))} replace />
   const Screen = resolveScreen(def, id)
   if (!Screen) return <Navigate to="/" replace />
   // Screens are module-level lazy components looked up by id, not created here.

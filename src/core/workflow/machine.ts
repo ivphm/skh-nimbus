@@ -4,7 +4,7 @@ import type { CartLine, Staff } from '../domain/types'
 /**
  * The check-out station workflow as a pure state machine.
  *
- * idle → signingIn → reviewingLoans → selectingWorkOrder → drawing → confirming → success → idle
+ * idle → signingIn (recognised → Continue) → reviewingLoans → selectingWorkOrder → drawing → confirming → success → idle
  *                                    ↘ closingJob ↗
  *
  * The machine knows nothing about screens or experiences. The app maps states to
@@ -16,7 +16,13 @@ export type AuthError = 'face-not-recognised' | 'card-not-read'
 
 export type WorkflowState =
   | { name: 'idle' }
-  | { name: 'signingIn'; method: AuthMethod; error?: AuthError }
+  | {
+      name: 'signingIn'
+      method: AuthMethod
+      error?: AuthError
+      /** Set once Face ID or the card matches. The user confirms it is them before going on. */
+      recognised?: { staff: Staff; hasOpenLoans: boolean }
+    }
   | { name: 'reviewingLoans'; staff: Staff }
   | { name: 'selectingWorkOrder'; staff: Staff }
   | { name: 'drawing'; staff: Staff; workOrderId: string; cart: CartLine[]; unconfirmedWarning: boolean }
@@ -29,6 +35,8 @@ export type WorkflowEvent =
   | { type: 'USE_CARD' }
   | { type: 'AUTH_OK'; staff: Staff; hasOpenLoans: boolean }
   | { type: 'AUTH_FAILED'; error: AuthError }
+  | { type: 'CONTINUE' }
+  | { type: 'NOT_ME' }
   | { type: 'LOANS_REVIEWED' }
   | { type: 'SELECT_WORK_ORDER'; workOrderId: string }
   | { type: 'CHANGE_WORK_ORDER' }
@@ -59,11 +67,15 @@ export function transition(state: WorkflowState, event: WorkflowEvent): Workflow
 
     case 'signingIn':
       if (event.type === 'AUTH_OK')
-        return event.hasOpenLoans
-          ? { name: 'reviewingLoans', staff: event.staff }
-          : { name: 'selectingWorkOrder', staff: event.staff }
+        return { name: 'signingIn', method: state.method, recognised: { staff: event.staff, hasOpenLoans: event.hasOpenLoans } }
+      if (event.type === 'CONTINUE' && state.recognised)
+        return state.recognised.hasOpenLoans
+          ? { name: 'reviewingLoans', staff: state.recognised.staff }
+          : { name: 'selectingWorkOrder', staff: state.recognised.staff }
+      // Wrong person recognised: scan the staff card instead.
+      if (event.type === 'NOT_ME') return { name: 'signingIn', method: 'card' }
       // Face ID failure falls back to the staff card.
-      if (event.type === 'AUTH_FAILED')
+      if (event.type === 'AUTH_FAILED' && !state.recognised)
         return { name: 'signingIn', method: event.error === 'face-not-recognised' ? 'card' : state.method, error: event.error }
       if (event.type === 'USE_CARD') return { name: 'signingIn', method: 'card' }
       if (event.type === 'BACK') return initialState
@@ -78,6 +90,7 @@ export function transition(state: WorkflowState, event: WorkflowEvent): Workflow
 
     case 'selectingWorkOrder':
       if (event.type === 'SELECT_WORK_ORDER') return startDrawing(state.staff, event.workOrderId)
+      if (event.type === 'BACK') return { name: 'reviewingLoans', staff: state.staff }
       if (event.type === 'CLOSE_JOB')
         return { name: 'closingJob', staff: state.staff, workOrderId: event.workOrderId, returnTo: 'selectingWorkOrder' }
       return state
@@ -93,7 +106,8 @@ export function transition(state: WorkflowState, event: WorkflowEvent): Workflow
             ? { name: 'confirming', staff: state.staff, workOrderId: state.workOrderId, cart: state.cart }
             : state
         case 'CHANGE_WORK_ORDER':
-          return state.cart.length === 0 ? { name: 'selectingWorkOrder', staff: state.staff } : state
+          // The screen confirms first when this empties a non-empty list.
+          return { name: 'selectingWorkOrder', staff: state.staff }
         case 'STEP_AWAY':
           return state.cart.length > 0 ? { ...state, unconfirmedWarning: true } : initialState
         case 'DISMISS_WARNING':

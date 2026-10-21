@@ -3,14 +3,18 @@ import { initialState, transition, type WorkflowEvent, type WorkflowState } from
 
 interface WorkflowStore {
   state: WorkflowState
+  /** State before the last transition, so screens can tell where the user came from. */
+  previous: WorkflowState | null
   send: (event: WorkflowEvent) => WorkflowState
 }
 
 export const useWorkflow = create<WorkflowStore>((set, get) => ({
   state: initialState,
+  previous: null,
   send: (event) => {
-    const next = transition(get().state, event)
-    if (next !== get().state) set({ state: next })
+    const current = get().state
+    const next = transition(current, event)
+    if (next !== current) set({ state: next, previous: current })
     return next
   },
 }))

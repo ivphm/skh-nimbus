@@ -9,7 +9,7 @@ describe('workflow machine', () => {
   it('walks the happy path from idle to success', () => {
     const end = run([
       { type: 'WAKE' },
-      { type: 'AUTH_OK', staff: alex, hasOpenLoans: true },
+      { type: 'AUTH_OK', staff: alex, hasOpenLoans: true }, { type: 'CONTINUE' },
       { type: 'LOANS_REVIEWED' },
       { type: 'SELECT_WORK_ORDER', workOrderId: 'WO-2041' },
       { type: 'ADD_PART', partId: 'p-012' },
@@ -21,7 +21,30 @@ describe('workflow machine', () => {
   })
 
   it('skips the loan review when the user has nothing open', () => {
-    expect(run([{ type: 'WAKE' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }]).name).toBe('selectingWorkOrder')
+    expect(run([{ type: 'WAKE' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }, { type: 'CONTINUE' }]).name).toBe('selectingWorkOrder')
+  })
+
+  it('waits for the user to confirm who was recognised', () => {
+    const recognised = run([{ type: 'WAKE' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }])
+    expect(recognised).toMatchObject({ name: 'signingIn', recognised: { staff: alex } })
+    expect(transition(recognised, { type: 'NOT_ME' })).toEqual({ name: 'signingIn', method: 'card' })
+    expect(transition(recognised, { type: 'CONTINUE' }).name).toBe('selectingWorkOrder')
+  })
+
+  it('goes back from the work order list to the loan review', () => {
+    const picking = run([{ type: 'USE_CARD' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }, { type: 'CONTINUE' }])
+    expect(transition(picking, { type: 'BACK' }).name).toBe('reviewingLoans')
+  })
+
+  it('can change work order, emptying the list', () => {
+    const drawing = run([
+      { type: 'USE_CARD' },
+      { type: 'AUTH_OK', staff: alex, hasOpenLoans: false },
+      { type: 'CONTINUE' },
+      { type: 'SELECT_WORK_ORDER', workOrderId: 'WO-2041' },
+      { type: 'ADD_PART', partId: 'p-012' },
+    ])
+    expect(transition(drawing, { type: 'CHANGE_WORK_ORDER' })).toEqual({ name: 'selectingWorkOrder', staff: alex })
   })
 
   it('falls back to the staff card when Face ID fails', () => {
@@ -30,19 +53,19 @@ describe('workflow machine', () => {
   })
 
   it('works end to end with card-only login', () => {
-    const s = run([{ type: 'USE_CARD' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }])
+    const s = run([{ type: 'USE_CARD' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }, { type: 'CONTINUE' }])
     expect(s.name).toBe('selectingWorkOrder')
   })
 
   it('does not review an empty list', () => {
-    const drawing = run([{ type: 'WAKE' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }, { type: 'SELECT_WORK_ORDER', workOrderId: 'WO-2041' }])
+    const drawing = run([{ type: 'WAKE' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }, { type: 'CONTINUE' }, { type: 'SELECT_WORK_ORDER', workOrderId: 'WO-2041' }])
     expect(transition(drawing, { type: 'REVIEW' })).toBe(drawing)
   })
 
   it('warns instead of signing out when the user steps away with an open list', () => {
     const drawing = run([
       { type: 'USE_CARD' },
-      { type: 'AUTH_OK', staff: alex, hasOpenLoans: false },
+      { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }, { type: 'CONTINUE' },
       { type: 'SELECT_WORK_ORDER', workOrderId: 'WO-2041' },
       { type: 'ADD_PART', partId: 'p-012' },
     ])
@@ -55,7 +78,7 @@ describe('workflow machine', () => {
   it('returns to drawing when the last line is removed on review', () => {
     const confirming = run([
       { type: 'USE_CARD' },
-      { type: 'AUTH_OK', staff: alex, hasOpenLoans: false },
+      { type: 'AUTH_OK', staff: alex, hasOpenLoans: false }, { type: 'CONTINUE' },
       { type: 'SELECT_WORK_ORDER', workOrderId: 'WO-2041' },
       { type: 'ADD_PART', partId: 'p-012' },
       { type: 'REVIEW' },
@@ -64,7 +87,7 @@ describe('workflow machine', () => {
   })
 
   it('closes a job and returns where it started on back', () => {
-    const reviewing = run([{ type: 'USE_CARD' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: true }])
+    const reviewing = run([{ type: 'USE_CARD' }, { type: 'AUTH_OK', staff: alex, hasOpenLoans: true }, { type: 'CONTINUE' }])
     const closing = transition(reviewing, { type: 'CLOSE_JOB', workOrderId: 'WO-2038' })
     expect(closing.name).toBe('closingJob')
     expect(transition(closing, { type: 'BACK' }).name).toBe('reviewingLoans')
